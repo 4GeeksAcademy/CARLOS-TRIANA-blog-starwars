@@ -1,42 +1,44 @@
 const getState = ({ getStore, getActions, setStore }) => {
+	
 	return {
 		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			url: 'https://www.swapi.tech/api/',
+			favorites: []
+			
 		},
 		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
+			getData: async (type) => {
+				try {
+					const respuesta = await fetch(`${getStore().url}/${type}`);
+					if (!respuesta.ok) throw new Error('error al obtener los datos');
+					const data = await respuesta.json();
+					setStore({[type]: data.results});
+				} catch (error) {
+					console.error(error);
+				}
 			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
+
+			getOne: async (type , uid) => {
+				try {
+					const respuesta = await fetch(`${getStore().url}/${type}/${uid}`);
+					if (!respuesta.ok) throw new Error('error al obtener datalles');
+					const data = await respuesta.json();
+					setStore({detailed: data.result});
+				} catch (error) {
+					console.error(error);
+				}
 			},
-			changeColor: (index, color) => {
-				//get the store
+
+			addRemoveFavorites: (favorites) => {
 				const store = getStore();
-
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
-
-				//reset the global store
-				setStore({ demo: demo });
+				const isFavorite = store.favorites.some(el=> el.uid === favorites.uid && el.type === favorites.type);
+				if (isFavorite)  {
+                    setStore({
+						favorites: store.favorites.filter(el=> !(el.uid === favorites.uid && el.type === favorites.type))
+					})
+				} else {
+				setStore({favorites: [...store.favorites, favorites]})
+				}
 			}
 		}
 	};
